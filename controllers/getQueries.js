@@ -61,6 +61,11 @@ async function getDeviceDetails(deviceid) {
 
   return rows[0];
 }
+async function getAllDevices() {
+  let sql = `select * from device`;
+  const rows = await connectDB().query(sql);
+  return rows;
+}
 
 exports.getAllStatus = getAllStatus;
 exports.getStatus = getStatus;
@@ -68,3 +73,4 @@ exports.getDevice = getDevice;
 exports.getDeviceDetails = getDeviceDetails;
 exports.getTicketMessage = getTicketMessage;
 exports.getTicketMessageTime = getTicketMessageTime;
+exports.getAllDevices = getAllDevices;

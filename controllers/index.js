@@ -16,16 +16,6 @@ function connectDB() {
   });
 }
 
-function execQuery(sql, message) {
-  connectDB();
-  con.query(sql, (err, results, fields) => {
-    if (err) throw err;
-    console.log(message);
-  });
-
-  con.end();
-}
-
 module.exports = {
   insertTicket: insertTicket,
   insertConfiguration: insertConfiguration,

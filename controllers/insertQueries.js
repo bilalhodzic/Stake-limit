@@ -1,18 +1,24 @@
 var mysql = require("mysql");
+const util = require("util");
 
-var con;
+var connection;
 
 function connectDB() {
-  con = mysql.createConnection({
+  connection = mysql.createConnection({
     host: "localhost",
     user: "root",
     password: "",
     database: "stake-limit",
   });
-  con.connect((err) => {
-    if (err) console.log(err.message);
-    console.log("connected");
-  });
+
+  return {
+    query(sql, args) {
+      return util.promisify(connection.query).call(connection, sql, args);
+    },
+    close() {
+      return util.promisify(connection.end).call(connection);
+    },
+  };
 }
 
 //insert ticket to database
@@ -25,36 +31,29 @@ function insertTicket(ticket, date) {
 
   let sql = `insert into ticketmessage (id, deviceId, stake,  sendTime) values('${ticket.id}', '${ticket.deviceId}', ${ticket.stake}, '${fullDate}')`;
   connectDB();
-  con.query(sql, (err, results, fields) => {
+  connection.query(sql, (err, results, fields) => {
     if (err) return console.error(err.message);
     console.log("1 ticketMessage  record inserted");
   });
 
-  con.end();
+  connection.end();
 }
 
 //insert a new device into database
-function insertDevice(device) {
-  let sql = `insert into device (deviceId, statusId,  serviceId, totalStake,startTime) values('${device.deviceId}', 1, 2, ${device.totalStake}, '${device.startTime}')`;
-  connectDB();
-  con.query(sql, (err, results, fields) => {
-    if (err) return console.error(err.message);
-    console.log("1 device  record inserted");
-  });
+async function insertDevice(device) {
+  let sql = `insert into device (deviceId, statusId,  serviceId, totalStake,startTime) values('${device.deviceId}', 1, 11, ${device.totalStake}, '${device.startTime}')`;
 
-  con.end();
+  var rows = await connectDB().query(sql);
+  console.log("inserted 1 device with id: ", rows.insertId);
+  return rows;
 }
 
-function insertConfiguration(configuration) {
-  connectDB();
-
+async function insertConfiguration(configuration) {
   let sql = `insert into configuration (timeDuration, stakeLimit, hotPercentage, restrictionExpires) values(${configuration.timeDuration}, ${configuration.stakeLimit}, ${configuration.hotPercentage}, ${configuration.restrictionExpires})`;
-  con.query(sql, (err, results, fields) => {
-    if (err) throw err;
-    console.log("1 configuration record inserted");
-  });
 
-  con.end();
+  var rows = await connectDB().query(sql);
+  console.log("inserted 1 configuration with id: ", rows.insertId);
+  return rows;
 }
 
 exports.insertTicket = insertTicket;
