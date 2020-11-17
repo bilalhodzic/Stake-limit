@@ -4,6 +4,7 @@ const {
   getAllDevices,
   getDeviceDetails,
   getAllTickets,
+  getTicketMessage,
 } = require("../controllers/getQueries");
 
 const router = express.Router();
@@ -17,7 +18,10 @@ router.get("/", (req, res) => {
 router.get("/device/:id", (req, res) => {
   getDeviceDetails(req.params.id)
     .then((results) => {
-      res.send(results);
+      getTicketMessage(results.deviceId).then((tickets) => {
+        results.tickets = tickets;
+        res.send(results);
+      });
     })
     .catch((err) => {
       res.send(err.message);

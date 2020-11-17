@@ -6,7 +6,11 @@ const {
   insertConfiguration,
   insertTicket,
 } = require("../controllers/insertQueries");
-const { getDeviceDetails, getStatus } = require("../controllers/getQueries");
+const {
+  getDeviceDetails,
+  getStatus,
+  getConfiguration,
+} = require("../controllers/getQueries");
 const {
   makeStartTime,
   addStakeToSum,
@@ -116,19 +120,26 @@ router.post("/configure", (req, res) => {
   error = checkConfPayload(req.body);
 
   if (!error) {
-    insertConfiguration(req.body)
-      .then((service) => {
-        res.send("Configuration added");
-      })
-      .catch((err) => {
-        res.send(err.message);
-      });
+    //check if same configurations already exist
+    getConfiguration(req.body).then((exist) => {
+      if (!exist) {
+        insertConfiguration(req.body)
+          .then((_) => {
+            res.send("Configuration added");
+          })
+          .catch((err) => {
+            res.send(err.message);
+          });
+      } else {
+        res.send("Same configuration already exist");
+      }
+    });
   } else {
     res.send(error);
   }
 });
 
-/*
+/* --configuration--
 {
     "timeDuration": "500",
     "stakeLimit": "300",
@@ -143,14 +154,21 @@ router.post("/configure/:deviceId", (req, res) => {
   let error = checkConfPayload(req.body);
 
   if (!error) {
-    insertConfiguration(req.body)
-      .then((service) => {
-        updateDeviceConf(req.params.deviceId, service.insertId);
-        res.send("Configuration updated");
-      })
-      .catch((err) => {
-        res.send(err.message);
-      });
+    getConfiguration(req.body).then((exist) => {
+      if (!exist) {
+        insertConfiguration(req.body)
+          .then((service) => {
+            updateDeviceConf(req.params.deviceId, service.insertId);
+            res.send("Configuration updated");
+          })
+          .catch((err) => {
+            res.send(err.message);
+          });
+      } else {
+        updateDeviceConf(req.params.deviceId, exist.serviceID);
+        res.send("Same configuration already exist");
+      }
+    });
   } else {
     res.send(error);
   }

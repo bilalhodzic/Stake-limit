@@ -36,16 +36,13 @@ async function getStatus(deviceId) {
   return rows[0];
 }
 
-//get one device from device table
-async function getDevice(deviceId) {
-  let sql = `select deviceId from device where deviceId='${deviceId}'`;
-
+async function getTicketById(id) {
+  let sql = `select * from ticketmessage where id='${id}'`;
   const rows = await connectDB().query(sql);
   return rows[0];
 }
-
-async function getTicketById(id) {
-  let sql = `select * from ticketmessage where id='${id}'`;
+async function getAllTickets() {
+  let sql = `select * from ticketmessage`;
   const rows = await connectDB().query(sql);
   return rows[0];
 }
@@ -58,6 +55,13 @@ async function getTicketMessageTime(deviceId) {
   let sql = `select * from ticketmessage  where deviceId='${deviceId}' order by sendTime desc`;
   const rows = await connectDB().query(sql);
   return rows;
+}
+//get one device from device table
+async function getDevice(deviceId) {
+  let sql = `select deviceId from device where deviceId='${deviceId}'`;
+
+  const rows = await connectDB().query(sql);
+  return rows[0];
 }
 
 async function getDeviceDetails(deviceid) {
@@ -72,12 +76,23 @@ async function getAllDevices() {
   const rows = await connectDB().query(sql);
   return rows;
 }
+async function getConfiguration(configuration) {
+  let sql = `select * from configuration where timeDuration=${configuration.timeDuration} and stakeLimit=${configuration.stakeLimit} and hotPercentage=${configuration.hotPercentage} and restrictionExpires=${configuration.restrictionExpires}`;
+
+  const rows = await connectDB().query(sql);
+  return rows[0];
+}
+
+exports.getConfiguration = getConfiguration;
 
 exports.getAllStatus = getAllStatus;
 exports.getStatus = getStatus;
+
 exports.getDevice = getDevice;
 exports.getDeviceDetails = getDeviceDetails;
+exports.getAllDevices = getAllDevices;
+
 exports.getTicketMessage = getTicketMessage;
 exports.getTicketMessageTime = getTicketMessageTime;
-exports.getAllDevices = getAllDevices;
 exports.getTicketById = getTicketById;
+exports.getAllTickets = getAllTickets;

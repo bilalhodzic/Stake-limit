@@ -10,22 +10,31 @@ function connectDB() {
     password: "",
     database: "stake-limit",
   });
-  connection.connect((err) => {
-    if (err) console.log(err.message);
-  });
+  return {
+    query(sql, args) {
+      return util.promisify(connection.query).call(connection, sql, args);
+    },
+    close() {
+      return util.promisify(connection.end).call(connection);
+    },
+  };
 }
 
 async function deleteTicket(ticketMessageID) {
   let sql = `delete from ticketmessage where id='${ticketMessageID}'`;
 
-  connectDB();
-  connection.query(sql, (err) => {
-    if (err) return console.log(err);
-    console.log("Deleted 1 ticket message ");
-  });
-  connection.end();
+  var rows = await connectDB().query(sql);
+  console.log("deleted 1 ticketMessage with id: ", ticketMessageID);
+  return rows;
+}
+async function deleteAllTickets() {
+  let sql = `delete from ticketmessage`;
+  var rows = await connectDB().query(sql);
+  console.log("deleted 1 ticketMessage with id: ");
+  return rows;
 }
 
 module.exports = {
   deleteTicket: deleteTicket,
+  deleteAllTickets: deleteAllTickets,
 };
