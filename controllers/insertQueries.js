@@ -22,21 +22,12 @@ function connectDB() {
 }
 
 //insert ticket to database
-function insertTicket(ticket, date) {
-  //var date = new Date();
-  //var startTime = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-  var fullDate = `${date.getFullYear()}-${
-    date.getMonth() + 1
-  }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+async function insertTicket(ticket, date) {
+  let sql = `insert into ticketmessage (id, deviceId, stake,  sendTime) values('${ticket.id}', '${ticket.deviceId}', ${ticket.stake}, '${date}')`;
 
-  let sql = `insert into ticketmessage (id, deviceId, stake,  sendTime) values('${ticket.id}', '${ticket.deviceId}', ${ticket.stake}, '${fullDate}')`;
-  connectDB();
-  connection.query(sql, (err, results, fields) => {
-    if (err) return console.error(err.message);
-    console.log("1 ticketMessage  record inserted");
-  });
-
-  connection.end();
+  var rows = await connectDB().query(sql);
+  console.log("inserted 1 ticketMessage with id: ", ticket.id);
+  return rows;
 }
 
 //insert a new device into database

@@ -1,77 +1,84 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+
 const {
+  insertDevice,
   insertConfiguration,
   insertTicket,
-  getStatus,
-  getDevice,
-} = require("../controllers");
-const { insertDevice } = require("../controllers/insertQueries");
-const { getDeviceDetails } = require("../controllers/getQueries");
+} = require("../controllers/insertQueries");
+const { getDeviceDetails, getStatus } = require("../controllers/getQueries");
 const {
   makeStartTime,
   addStakeToSum,
   checkRestrExpire,
   percentage,
   checkConfPayload,
+  checkTicket,
 } = require("../helper");
 const {
   updateDeviceStatus,
-  updateDeviceStartTime,
   updateDeviceRestrTime,
   updateDeviceConf,
 } = require("../controllers/updateQueries");
-const { deleteTicket } = require("../controllers/deleteQueries");
 
 const router = express.Router();
 router.use(bodyParser.json());
 
 //endpoint which accept ticketMessage as payload
 router.post("/sendTicket", (req, res) => {
-  //console.log(req.body);
+  //using immediately invoked function expression to be able to use await in function
+  (async function () {
+    //check if the payload received is good
+    let error = await checkTicket(req.body);
+    if (error !== null) {
+      console.log("Error: ", error);
+      return res.status(200).send(error);
+    }
 
-  try {
-    (async function () {
-      //add received ticket to database
-
+    try {
       //checks if device already exist--
       let device = await getDeviceDetails(req.body.deviceId);
 
-      //console.log("device:", device);
       let date = new Date();
 
-      let InsertedDevice = false;
       //if there is no device already--insert it into database with configuration opt
       if (device === undefined) {
-        await insertDevice({
-          deviceId: req.body.deviceId,
-          startTime: makeStartTime(date),
-          totalStake: req.body.stake,
+        //insert configuration before device because we need serviceId as referenced key
+        let service = await insertConfiguration({
+          timeDuration: 1800, //30 minutes
+          stakeLimit: 1000,
+          hotPercentage: 80, //80%
+          restrictionExpires: 300, //5 min
         });
+        await insertDevice(
+          {
+            deviceId: req.body.deviceId,
+            startTime: makeStartTime(date),
+            totalStake: req.body.stake,
+          },
+          service.insertId
+        );
+
+        //we need to get device details again if device didn't exist previously
         device = await getDeviceDetails(req.body.deviceId);
-        InsertedDevice = true;
       }
 
-      await InsertedDevice;
-      //insert ticket in db when ticket message is received
-      insertTicket(req.body, date);
-
-      //if device exist check if it's blocked
+      //check status of device
       let status = await getStatus(req.body.deviceId);
 
-      //if it's still blocked return status BLOCKED
       if (status.statusName === "BLOCKED") {
         //function will return false if restriction didn't expire
         if ((await checkRestrExpire(req.body.deviceId)) === false) {
           console.log("restriction didnt expire");
 
           //if restriction did't expire--delete saved ticked from database
-          deleteTicket(req.body.id);
+          //deleteTicket(req.body.id);
           return res.status(200).send({ status: `${status.statusName}` });
         }
 
         //need to update device status if restriction expired
-        updateDeviceStatus(req.body.deviceId, "OK");
+        //updateDeviceStatus(req.body.deviceId, "OK");
+        status.statusName = "OK";
       }
 
       //add received stake to totalStake of device
@@ -80,24 +87,27 @@ router.post("/sendTicket", (req, res) => {
       //stake limit where status HOT is sent
       let hotLimit = percentage(device.hotPercentage, device.stakeLimit);
       if (totalStake >= device.stakeLimit) {
-        updateDeviceStatus(req.body.deviceId, "BLOCKED");
+        status.statusName = "BLOCKED";
+        //update device status in database
+        await updateDeviceStatus(req.body.deviceId, "BLOCKED");
 
         //insert start of restriction counting time to device in db
-        updateDeviceRestrTime(req.body.deviceId, makeStartTime(date));
-
-        return res.status(200).send({ status: `BLOCKED` });
+        await updateDeviceRestrTime(req.body.deviceId, makeStartTime(date));
       } else if (totalStake >= hotLimit) {
-        updateDeviceStatus(req.body.deviceId, "HOT");
-
-        return res.status(200).send({ status: `HOT` });
+        status.statusName = "HOT";
+        await updateDeviceStatus(req.body.deviceId, "HOT");
       }
 
       //if all the conditions were ok
-      res.status(200).send({ status: `OK` });
-    })();
-  } catch (err) {
-    res.send(err.message);
-  }
+      //insert ticket in db when ticket message is received
+      await insertTicket(req.body, makeStartTime(date));
+
+      return res.status(200).send({ status: status.statusName });
+    } catch (err) {
+      console.log("Error: ", err.message);
+      res.send(err.message);
+    }
+  })();
 });
 
 //endpoint to configure stake limit service

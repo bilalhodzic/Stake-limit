@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const {
   getAllDevices,
   getDeviceDetails,
+  getAllTickets,
 } = require("../controllers/getQueries");
 
 const router = express.Router();
@@ -34,12 +35,14 @@ router.get("/device", (req, res) => {
     });
 });
 
-router.get("/test", (req, res) => {
-  (async function () {
-    updateDeviceStatus("7d570ef0-0bef-41e9-baea-2535bd08b55f", "OK");
-
-    res.send("tested");
-  })();
+router.get("/tickets", (req, res) => {
+  getAllTickets()
+    .then((results) => {
+      res.send(results);
+    })
+    .catch((err) => {
+      res.send(err.message);
+    });
 });
 
 module.exports = router;

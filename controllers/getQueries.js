@@ -43,6 +43,12 @@ async function getDevice(deviceId) {
   const rows = await connectDB().query(sql);
   return rows[0];
 }
+
+async function getTicketById(id) {
+  let sql = `select * from ticketmessage where id='${id}'`;
+  const rows = await connectDB().query(sql);
+  return rows[0];
+}
 async function getTicketMessage(deviceId) {
   let sql = `select * from ticketmessage where deviceId='${deviceId}'`;
   const rows = await connectDB().query(sql);
@@ -74,3 +80,4 @@ exports.getDeviceDetails = getDeviceDetails;
 exports.getTicketMessage = getTicketMessage;
 exports.getTicketMessageTime = getTicketMessageTime;
 exports.getAllDevices = getAllDevices;
+exports.getTicketById = getTicketById;

@@ -2,6 +2,7 @@ const {
   getDeviceDetails,
   getTicketMessage,
   getTicketMessageTime,
+  getTicketById,
 } = require("./controllers/getQueries");
 const dayjs = require("dayjs");
 const {
@@ -26,9 +27,13 @@ const addStakeToSum = async (ticketMessage, date) => {
   var sum = device.totalStake;
 
   //if the stake is added in time duration add it to total stake
+  //if time duration expired then start counting new time duration
   let timeNow = dayjs();
   let fromTime = dayjs(device.startTime);
+
+  //contains currentTime - startTime(when timeDuration started)
   let interval = timeNow.diff(fromTime, "second");
+
   if (interval < device.timeDuration) {
     sum += ticketMessage.stake;
     updateDeviceStake(ticketMessage.deviceId, sum);
@@ -39,7 +44,6 @@ const addStakeToSum = async (ticketMessage, date) => {
     updateDeviceStake(ticketMessage.deviceId, ticketMessage.stake);
     return ticketMessage.stake;
   }
-  //console.log(interval);
 };
 
 //return true if restriction expired and reverse
@@ -70,6 +74,28 @@ const checkConfPayload = (request) => {
   }
   return error;
 };
+const checkTicket = async (request) => {
+  let error = null;
+
+  //check if ticket with same id already exist
+  let ticket = await getTicketById(request.id);
+
+  //regex to validate UUID
+  let validUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+  if (request.id === undefined || !validUUID.test(request.id)) {
+    return (error = "id is not valid");
+  } else if (
+    request.deviceId === undefined ||
+    !validUUID.test(request.deviceId)
+  ) {
+    return (error = "deviceId is not valid");
+  } else if (request.stake === undefined || isNaN(request.stake)) {
+    return (error = "Stake is not valid! send again");
+  } else if (ticket !== undefined) {
+    return (error = "Ticket with the same id already exist");
+  } else return error;
+};
 
 module.exports = {
   makeStartTime: makeStartTime,
@@ -77,4 +103,5 @@ module.exports = {
   checkRestrExpire: checkRestrExpire,
   percentage: percentage,
   checkConfPayload: checkConfPayload,
+  checkTicket: checkTicket,
 };
