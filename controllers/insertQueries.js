@@ -35,7 +35,7 @@ async function insertDevice(device) {
   let sql = `insert into device (deviceId, statusId,  serviceId, totalStake,startTime) values('${device.deviceId}', 1, 11, ${device.totalStake}, '${device.startTime}')`;
 
   var rows = await connectDB().query(sql);
-  console.log("inserted 1 device with id: ", rows.insertId);
+  console.log("inserted 1 device with id: ", device.deviceId);
   return rows;
 }
 

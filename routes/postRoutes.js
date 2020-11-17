@@ -48,19 +48,24 @@ router.post("/sendTicket", (req, res) => {
       //if there is no device already--insert it into database with configuration opt
       if (device === undefined) {
         //insert configuration before device because we need serviceId as referenced key
-        let service = await insertConfiguration({
+        let configurationOpt = {
           timeDuration: 1800, //30 minutes
           stakeLimit: 1000,
           hotPercentage: 80, //80%
-          restrictionExpires: 300, //5 min
-        });
+          restrictionExpires: 300, //5min
+        };
+        //check if sservice with given options already exists
+        let configExist = await getConfiguration(configurationOpt);
+        let service;
+
+        if (!configExist) service = await insertConfiguration(configurationOpt);
         await insertDevice(
           {
             deviceId: req.body.deviceId,
             startTime: makeStartTime(date),
-            totalStake: req.body.stake,
+            totalStake: 0,
           },
-          service.insertId
+          configExist ? configExist.serviceID : service.insertId
         );
 
         //we need to get device details again if device didn't exist previously
