@@ -31,8 +31,8 @@ async function insertTicket(ticket, date) {
 }
 
 //insert a new device into database
-async function insertDevice(device) {
-  let sql = `insert into device (deviceId, statusId,  serviceId, totalStake,startTime) values('${device.deviceId}', 1, 11, ${device.totalStake}, '${device.startTime}')`;
+async function insertDevice(device, serviceId) {
+  let sql = `insert into device (deviceId, statusId,  serviceId, totalStake,startTime) values('${device.deviceId}', 1, ${serviceId}, ${device.totalStake}, '${device.startTime}')`;
 
   var rows = await connectDB().query(sql);
   console.log("inserted 1 device with id: ", device.deviceId);
