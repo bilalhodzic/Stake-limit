@@ -1,3 +1,3 @@
 # Stake-limit
 
-![Alt text](https://github.com/bilalhodzic/stake-limit/blob/main/image.jpg?raw=truediagramflow-sendTicket.png)
+![diagram flow](https://github.com/bilalhodzic/Stake-limit/blob/main/diagram%20flow-sendTicket.png)
