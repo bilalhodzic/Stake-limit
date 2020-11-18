@@ -1,3 +1,3 @@
 # Stake-limit
 
-![alt text](diagram flow-sendTicket.png)
+![Screenshot](diagram flow-sendTicket.png)
