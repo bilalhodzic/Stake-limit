@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 18, 2020 at 10:21 AM
+-- Generation Time: Nov 18, 2020 at 02:20 PM
 -- Server version: 10.4.11-MariaDB
 -- PHP Version: 7.4.4
 
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `stake-limit`
 --
+CREATE DATABASE IF NOT EXISTS `stake-limit` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+USE `stake-limit`;
 
 -- --------------------------------------------------------
 
